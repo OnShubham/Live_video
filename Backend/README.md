@@ -6,7 +6,7 @@
 
 
 ## Basic setup folder and structure
-```
+```javascript
 |—— Backend
 |    |——public
 |    |—— src
@@ -23,7 +23,9 @@
 |    |—— .env.sample
 |    |—— .gitignore
 |    |—— README.md
-```
+|    |—— prettierrc.ignore  // install this npm
+|    |—— .prettierrc  // and setup documention
+``` 
 
 ## package,json
 ```json
@@ -43,3 +45,5 @@
   }
 }
 ```
+
+ b
