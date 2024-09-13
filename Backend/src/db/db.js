@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import { DB_NAME } from '../constant.js';
 
-
 const conncetDB = async () => {
   try {
     const conncetInstanct = await mongoose.connect(
@@ -14,5 +13,4 @@ const conncetDB = async () => {
   }
 };
 
-
-export default conncetDB
+export default conncetDB;
