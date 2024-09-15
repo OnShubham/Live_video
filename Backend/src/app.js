@@ -19,6 +19,6 @@ app.use(
   })
 );
 app.use(express.static('public'));
-app.use(cookieParser());
+// app.use(cookieParser());
 
 export { app };
