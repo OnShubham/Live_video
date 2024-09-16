@@ -228,4 +228,114 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 });
 
-export { registerUser, UserLogin, logout, refreshAccessToken };
+// changePassword
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body();
+
+  const user = await User.findById(req.user?._id);
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, 'Invalid Old Password');
+  }
+
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
+
+  return res.status(200).json(new ApiResponse(200, {}, 'Password change'));
+});
+
+const getCurrentUser = await asyncHandler(async (req, res) => {
+  return res.status(200).json(200, req.user, 'cuurent user fetched');
+});
+
+const updateAccountHandler = asyncHandler(async (req, res) => {
+  const { fullname, email } = req.body;
+
+  if (!fullname || !email) {
+    throw new ApiError(400, 'update all filed required');
+  }
+
+  User.findByIdAndUpdate(
+    req.user?._id,
+
+    {
+      $set: {
+        fullname,
+        email: email,
+      },
+    },
+
+    {
+      new: true,
+    }
+  ).select(' -password');
+
+  return res.status(200);
+});
+
+const updateUserAvatar = asyncHandler(async (req, res) => {
+  const avatarLocalPath = req.file?.path;
+
+  if (!avatarLocalPath) {
+    throw new ApiError(400, 'Avatarr file is missing');
+  }
+
+  const avatar = await uploadOnCloudnary(avatarLocalPath);
+
+  if (!avatar.url) {
+    throw new ApiError(400, 'Error while uploding on avatar');
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        avatar: avatar.url,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+  return res.status(200).json(new ApiResponse(200, user, 'cover image upadte'));
+});
+
+const updateCoverImages = asyncHandler(async (req, res) => {
+  const coverImgLocalPath = req.file?.path;
+
+  if (!coverImgLocalPath) {
+    throw new ApiError(400, 'CoverImg file is missing');
+  }
+
+  const coverImage = await uploadOnCloudnary(coverImgLocalPath);
+
+  if (!coverImage.url) {
+    throw new ApiError(400, 'Error while uploding on coverImage');
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user?._id,
+    {
+      $set: {
+        coverImage: coverImage.url,
+      },
+    },
+    {
+      new: true,
+    }
+  );
+  return res.status(200).json(new ApiResponse(200, user, 'cover image upadte'));
+});
+
+export {
+  registerUser,
+  UserLogin,
+  logout,
+  refreshAccessToken,
+  changeCurrentPassword,
+  getCurrentUser,
+  updateAccountHandler,
+  updateUserAvatar,
+  updateCoverImages,
+};
