@@ -102,29 +102,37 @@ const UserLogin = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
 
   if (!username && !email) {
-    throw new ApiError(400, 'username and email is required');
+    throw new ApiError(400, 'Username or email is required');
   }
 
+  // Query user by email or username
   const user = await User.findOne({
-    $or: [{ username }, [email]],
+    $or: [{ username }, { email }],
   });
 
   if (!user) {
-    throw new ApiError(400, 'user not found');
+    throw new ApiError(404, 'User not found');
   }
 
+  // Verify password
   const isPasswordValid = await user.isPasswordCorrect(password);
 
   if (!isPasswordValid) {
-    throw new ApiError(400, 'Password is inccorent');
+    throw new ApiError(400, 'Password is incorrect');
   }
 
-  const { AccessToken, RefreshToken } = await generateAccessTokens(user._id);
+  // Generate tokens
+  const accessToken = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
 
-  const loggenedUser = User.findById(user._id).select(
-    '-password -refrencToken'
-  );
+  // Save the refresh token to the user
+  user.refreshToken = refreshToken;
+  await user.save({ validateBeforeSave: false });
 
+  // Remove sensitive fields from the response
+  const userResponse = await User.findById(user._id).select('-password -refreshToken');
+
+  // Set cookies for tokens
   const options = {
     httpOnly: true,
     secure: true,
@@ -132,20 +140,21 @@ const UserLogin = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .cookie('accessToken', AccessToken, options)
-    .cookie('RefreshToken', RefreshToken, options)
+    .cookie('accessToken', accessToken, options)
+    .cookie('refreshToken', refreshToken, options)
     .json(
       new ApiResponse(
         200,
         {
-          user: loggenedUser,
-          RefreshToken,
-          AccessToken,
+          user: userResponse,
+          accessToken,
+          refreshToken,
         },
         'User Login Success'
       )
     );
 });
+
 
 const logout = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(

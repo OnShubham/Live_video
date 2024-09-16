@@ -11,7 +11,7 @@ app.use(
 );
 
 // basic config
-app.use(express.json({ limit: '1mbps' })); // data upload in db
+app.use(express.json({ limit: '12kb' })); // data upload in db
 app.use(
   express.urlencoded({
     extended: true,
